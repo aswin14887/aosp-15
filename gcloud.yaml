@@ -106,7 +106,7 @@ steps:
         
         export USE_CCACHE=1
         export CCACHE_DIR=/workspace/ccache
-        mkdir -p $CCACHE_DIR
+        mkdir -p $$CCACHE_DIR
         
         repo sync \
           -j8 \
@@ -139,9 +139,9 @@ steps:
         echo "=========================================="
         echo "Build Configuration:"
         echo "=========================================="
-        echo "Platform Version: $PLATFORM_VERSION"
-        echo "Target Product: $TARGET_PRODUCT"
-        echo "Build Variant: $TARGET_BUILD_VARIANT"
+        echo "Platform Version: $$PLATFORM_VERSION"
+        echo "Target Product: $$TARGET_PRODUCT"
+        echo "Build Variant: $$TARGET_BUILD_VARIANT"
         echo "=========================================="
         
         echo "✓ Build environment configured successfully"
