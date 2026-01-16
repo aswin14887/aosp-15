@@ -118,9 +118,6 @@ steps:
     
     waitFor: ['init-repo']
     timeout: '7200s'
-    env:
-      - 'USE_CCACHE=1'
-      - 'CCACHE_DIR=/workspace/ccache'
 
   # ========== STEP 4: Setup Build Environment ==========
   - name: 'ubuntu:22.04'
@@ -180,9 +177,6 @@ steps:
     
     waitFor: ['setup-build-env']
     timeout: '14400s'
-    env:
-      - 'USE_CCACHE=1'
-      - 'CCACHE_DIR=/workspace/ccache'
 
   # ========== STEP 6: Upload Build Artifacts ==========
   - name: 'gcr.io/cloud-builders/gsutil'
