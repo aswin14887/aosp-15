@@ -17,10 +17,8 @@ steps:
         echo "STEP 1: Installing Dependencies..."
         echo "=========================================="
         
-        # Update package manager
         apt-get update
         
-        # Install all required packages for AOSP build
         apt-get install -y \
           git \
           repo \
@@ -57,7 +55,6 @@ steps:
           kpartx \
           mtools \
         
-        # Configure git (required for repo sync)
         git config --global user.email "aswin14887@gmail.com"
         git config --global user.name "Aswin Vodapally"
         
@@ -74,15 +71,9 @@ steps:
         echo "STEP 2: Initializing AOSP Repository..."
         echo "=========================================="
         
-        # Create AOSP directory
         mkdir -p /workspace/aosp
         cd /workspace/aosp
         
-        # Initialize repo with AOSP manifest
-        # Change android-14.0.0_r1 to your desired branch:
-        # - android-14.0.0_r1  (Android 14)
-        # - android-13.0.0_r1  (Android 13)
-        # - android-12.0.0_r1  (Android 12)
         repo init \
           -u https://android.googlesource.com/platform/manifest \
           -b android-15.0.0_r32 \
@@ -97,7 +88,6 @@ steps:
         
         echo "✓ Repository initialized successfully"
     
-    # Wait for previous step to complete
     waitFor: ['install-dependencies']
 
   # ========== STEP 3: Sync AOSP Source Code ==========
@@ -114,14 +104,10 @@ steps:
         
         cd /workspace/aosp
         
-        # Enable ccache (caches build files for faster rebuilds)
         export USE_CCACHE=1
         export CCACHE_DIR=/workspace/ccache
         mkdir -p $CCACHE_DIR
         
-        # Sync all repositories in parallel
-        # -j8 = 8 parallel download jobs
-        # Adjust based on your network speed
         repo sync \
           -j8 \
           --no-clone-bundle \
@@ -130,11 +116,11 @@ steps:
         
         echo "✓ Source code synced successfully"
     
-    # This step depends on the init-repo step
     waitFor: ['init-repo']
-    
-    # Increase timeout (syncing takes time)
-    timeout: '7200s'  # 2 hours
+    timeout: '7200s'
+    env:
+      - 'USE_CCACHE=1'
+      - 'CCACHE_DIR=/workspace/ccache'
 
   # ========== STEP 4: Setup Build Environment ==========
   - name: 'ubuntu:22.04'
@@ -149,14 +135,9 @@ steps:
         
         cd /workspace/aosp
         
-        # Source the build environment setup script
-        # This loads all AOSP build variables
         source build/envsetup.sh
-        
-        
         lunch aosp_rpi5_car-bp1a-userdebug
         
-        # Display build configuration
         echo ""
         echo "=========================================="
         echo "Build Configuration:"
@@ -184,17 +165,12 @@ steps:
         
         cd /workspace/aosp
         
-        # Setup environment again (new bash session)
         source build/envsetup.sh
         lunch aosp_rpi5_car-bp1a-userdebug
         
-        # Enable ccache and build
         export USE_CCACHE=1
         export CCACHE_DIR=/workspace/ccache
         
-        # Build AOSP with parallel jobs
-        # -j4 = 4 parallel jobs (conservative for cloud)
-        # Increase to -j8 if you have more resources
         make bootimage systemimage vendorimage -j4 2>&1 | tee /workspace/build.log
         
         echo ""
@@ -203,11 +179,7 @@ steps:
         echo "=========================================="
     
     waitFor: ['setup-build-env']
-    
-    # Allow enough time for full build
-    timeout: '14400s'  # 4 hours
-    
-    # Set environment variables for this step
+    timeout: '14400s'
     env:
       - 'USE_CCACHE=1'
       - 'CCACHE_DIR=/workspace/ccache'
@@ -216,9 +188,9 @@ steps:
   - name: 'gcr.io/cloud-builders/gsutil'
     id: 'upload-artifacts'
     args:
-      - '-m'      # multi-threaded
-      - 'cp'      # copy
-      - '-r'      # recursive
+      - '-m'
+      - 'cp'
+      - '-r'
       - '/workspace/aosp/out/target/product/'
       - 'gs://dulcet-analyst-484512-n8/build-${BUILD_ID}/'
     
@@ -239,23 +211,7 @@ steps:
 # ============================================
 
 options:
-  # Machine type: determines CPU cores and RAM
-  # Options: N1_HIGHCPU_4, N1_HIGHCPU_8, N1_HIGHCPU_32, N1_HIGHCPU_96
-  # Recommended: N1_HIGHCPU_8 (8 cores, 7.2GB RAM)
   machineType: 'N1_HIGHCPU_8'
-  
-  # Logging configuration
   logging: CLOUD_LOGGING_ONLY
 
-# Maximum build time (must be less than 24 hours)
-# Current: 6 hours (21600 seconds)
 timeout: '21600s'
-
-# ============================================
-# Substitution Variables
-# ============================================
-
-substitutions:
-  # Can be overridden when submitting build
-  _BUILD_VARIANT: 'userdebug'
-  _ANDROID_BRANCH: 'android-15.0.0_r32'
