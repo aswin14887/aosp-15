@@ -182,7 +182,7 @@ steps:
 # ============================================
 
 options:
-  machineType: 'E2_HIGHMEM_32'
+  machineType: E2_HIGHMEM_32
   diskSizeGb: 1000
   logging: CLOUD_LOGGING_ONLY
 
