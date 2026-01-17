@@ -71,6 +71,8 @@ steps:
         echo "STEP 2: Installing repo Tool..."
         echo "=========================================="
         
+        apt-get update && apt-get install -y curl ca-certificates
+
         mkdir -p /usr/local/bin
         curl https://storage.googleapis.com/git-repo-downloads/repo > /usr/local/bin/repo
         chmod a+x /usr/local/bin/repo
@@ -100,9 +102,11 @@ steps:
           --depth=1 \
           --no-clone-bundle
 
+        apt-get update && apt-get install -y curl ca-certificates
+
         curl -o .repo/local_manifests/manifest_brcm_rpi.xml \
           -L https://raw.githubusercontent.com/raspberry-vanilla/android_local_manifest/android-15.0/manifest_brcm_rpi.xml --create-dirs
-        
+
         curl -o .repo/local_manifests/remove_projects.xml \
           -L https://raw.githubusercontent.com/raspberry-vanilla/android_local_manifest/android-15.0/remove_projects.xml
         
