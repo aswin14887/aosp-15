@@ -145,7 +145,7 @@ steps:
         export USE_CCACHE=1
         export CCACHE_DIR=/workspace/ccache
         
-        make bootimage systemimage vendorimage -j1 2>&1 | tee /workspace/build.log
+        make bootimage systemimage vendorimage -j2 2>&1 | tee /workspace/build.log
         
         echo ""
         echo "=========================================="
@@ -182,7 +182,7 @@ steps:
 # ============================================
 
 options:
-  machineType: 'N1_HIGHMEM_32'
+  machineType: 'N1_HIGHCPU_32'
   diskSizeGb: 1000
   logging: CLOUD_LOGGING_ONLY
 
