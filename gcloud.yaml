@@ -213,7 +213,7 @@ steps:
 # ============================================
 
 options:
-  machineType: 'N1_STANDARD_64'
+  machineType: 'N1_HIGHCPU_96'
   diskSizeGb: 1000
   logging: CLOUD_LOGGING_ONLY
 
