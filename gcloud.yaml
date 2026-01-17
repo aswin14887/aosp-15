@@ -123,38 +123,7 @@ steps:
     waitFor: ['repo-init']
     timeout: '7200s'
 
-  # ========== STEP 4: Setup Build Environment ==========
-  - name: 'ubuntu:22.04'
-    id: 'setup-build-env'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        echo "=========================================="
-        echo "STEP 4: Setting up Build Environment..."
-        echo "=========================================="
-        
-        apt-get update && apt-get install -y git repo python3 openjdk-11-jdk-headless flex bison build-essential
-        
-        cd /workspace/aosp
-        
-        source build/envsetup.sh
-        lunch aosp_rpi5_car-bp1a-userdebug
-        
-        echo ""
-        echo "=========================================="
-        echo "Build Configuration:"
-        echo "=========================================="
-        echo "Platform Version: $$PLATFORM_VERSION"
-        echo "Target Product: $$TARGET_PRODUCT"
-        echo "Build Variant: $$TARGET_BUILD_VARIANT"
-        echo "=========================================="
-        
-        echo "✓ Build environment configured successfully"
-    
-    waitFor: ['sync-source']
-
-  # ========== STEP 5: Build AOSP ==========
+  # ========== STEP 4: Build AOSP ==========
   - name: 'ubuntu:22.04'
     id: 'build-aosp'
     entrypoint: 'bash'
@@ -162,7 +131,7 @@ steps:
       - '-c'
       - |
         echo "=========================================="
-        echo "STEP 5: Building AOSP..."
+        echo "STEP 4: Building AOSP..."
         echo "This will take 2-6 hours..."
         echo "=========================================="
         
@@ -183,10 +152,10 @@ steps:
         echo "✓ Build completed successfully!"
         echo "=========================================="
     
-    waitFor: ['setup-build-env']
-    timeout: '14400s'
+    waitFor: ['sync-source']
+    timeout: '28800s'
 
-  # ========== STEP 6: Upload Build Artifacts ==========
+  # ========== STEP 5: Upload Build Artifacts ==========
   - name: 'gcr.io/cloud-builders/gsutil'
     id: 'upload-artifacts'
     args:
@@ -198,7 +167,7 @@ steps:
     
     waitFor: ['build-aosp']
 
-  # ========== STEP 7: Upload Build Log ==========
+  # ========== STEP 6: Upload Build Log ==========
   - name: 'gcr.io/cloud-builders/gsutil'
     id: 'upload-log'
     args:
