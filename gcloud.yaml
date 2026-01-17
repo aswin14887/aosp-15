@@ -60,7 +60,27 @@ steps:
         
         echo "✓ Dependencies installed successfully"
 
-  # ========== STEP 2: Initialize AOSP Repository ==========
+  # ========== STEP 2: Install repo Tool ==========
+  - name: 'ubuntu:22.04'
+    id: 'install-repo'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "=========================================="
+        echo "STEP 2: Installing repo Tool..."
+        echo "=========================================="
+        
+        mkdir -p /usr/local/bin
+        curl https://storage.googleapis.com/git-repo-downloads/repo > /usr/local/bin/repo
+        chmod a+x /usr/local/bin/repo
+        repo --version
+        
+        echo "✓ repo tool installed successfully"
+    
+    waitFor: ['install-dependencies']
+
+  # ========== STEP 3: Initialize AOSP Repository ==========
   - name: 'ubuntu:22.04'
     id: 'init-repo'
     entrypoint: 'bash'
@@ -68,7 +88,7 @@ steps:
       - '-c'
       - |
         echo "=========================================="
-        echo "STEP 2: Initializing AOSP Repository..."
+        echo "STEP 3: Initializing AOSP Repository..."
         echo "=========================================="
         
         mkdir -p /workspace/aosp
@@ -88,9 +108,9 @@ steps:
         
         echo "✓ Repository initialized successfully"
     
-    waitFor: ['install-dependencies']
+    waitFor: ['install-repo']
 
-  # ========== STEP 3: Sync AOSP Source Code ==========
+  # ========== STEP 4: Sync AOSP Source Code ==========
   - name: 'ubuntu:22.04'
     id: 'sync-source'
     entrypoint: 'bash'
@@ -98,7 +118,7 @@ steps:
       - '-c'
       - |
         echo "=========================================="
-        echo "STEP 3: Syncing AOSP Source Code..."
+        echo "STEP 4: Syncing AOSP Source Code..."
         echo "This may take 30-60 minutes..."
         echo "=========================================="
         
@@ -119,7 +139,7 @@ steps:
     waitFor: ['init-repo']
     timeout: '7200s'
 
-  # ========== STEP 4: Setup Build Environment ==========
+  # ========== STEP 5: Setup Build Environment ==========
   - name: 'ubuntu:22.04'
     id: 'setup-build-env'
     entrypoint: 'bash'
@@ -127,7 +147,7 @@ steps:
       - '-c'
       - |
         echo "=========================================="
-        echo "STEP 4: Setting up Build Environment..."
+        echo "STEP 5: Setting up Build Environment..."
         echo "=========================================="
         
         cd /workspace/aosp
@@ -148,7 +168,7 @@ steps:
     
     waitFor: ['sync-source']
 
-  # ========== STEP 5: Build AOSP ==========
+  # ========== STEP 6: Build AOSP ==========
   - name: 'ubuntu:22.04'
     id: 'build-aosp'
     entrypoint: 'bash'
@@ -156,7 +176,7 @@ steps:
       - '-c'
       - |
         echo "=========================================="
-        echo "STEP 5: Building AOSP..."
+        echo "STEP 6: Building AOSP..."
         echo "This will take 2-6 hours..."
         echo "=========================================="
         
@@ -178,7 +198,7 @@ steps:
     waitFor: ['setup-build-env']
     timeout: '14400s'
 
-  # ========== STEP 6: Upload Build Artifacts ==========
+  # ========== STEP 7: Upload Build Artifacts ==========
   - name: 'gcr.io/cloud-builders/gsutil'
     id: 'upload-artifacts'
     args:
@@ -190,7 +210,7 @@ steps:
     
     waitFor: ['build-aosp']
 
-  # ========== STEP 7: Upload Build Log ==========
+  # ========== STEP 8: Upload Build Log ==========
   - name: 'gcr.io/cloud-builders/gsutil'
     id: 'upload-log'
     args:
