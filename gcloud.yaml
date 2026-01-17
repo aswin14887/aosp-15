@@ -186,4 +186,4 @@ options:
   diskSizeGb: 1000
   logging: CLOUD_LOGGING_ONLY
 
-timeout: '21600s'
+timeout: '36000s'
