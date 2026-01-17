@@ -9,6 +9,9 @@ steps:
   # ========== STEP 1: Install Dependencies ==========
   - name: 'ubuntu:22.04'
     id: 'install-dependencies'
+    volumes:
+      - name: 'workspace'
+        path: '/workspace'
     entrypoint: 'bash'
     args:
       - '-c'
@@ -60,38 +63,21 @@ steps:
         
         echo "✓ Dependencies installed successfully"
 
-  # ========== STEP 2: Install repo Tool ==========
-  - name: 'ubuntu:22.04'
-    id: 'install-repo'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        echo "=========================================="
-        echo "STEP 2: Installing repo Tool..."
-        echo "=========================================="
-        
-        apt-get update && apt-get install -y curl ca-certificates
-
-        mkdir -p /usr/local/bin
-        curl https://storage.googleapis.com/git-repo-downloads/repo > /usr/local/bin/repo
-        chmod a+x /usr/local/bin/repo
-        repo --version
-        
-        echo "✓ repo tool installed successfully"
-    
-    waitFor: ['install-dependencies']
-
-  # ========== STEP 3: Initialize AOSP Repository ==========
+  # ========== STEP 2: Initialize AOSP Repository ==========
   - name: 'ubuntu:22.04'
     id: 'repo-init'
+    volumes:
+      - name: 'workspace'
+        path: '/workspace'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
         echo "=========================================="
-        echo "STEP 3: Initializing AOSP Repository..."
+        echo "STEP 2: Initializing AOSP Repository..."
         echo "=========================================="
+        
+        apt-get update && apt-get install -y git repo python3 curl
         
         mkdir -p /workspace/aosp
         cd /workspace/aosp
@@ -102,8 +88,6 @@ steps:
           --depth=1 \
           --no-clone-bundle
 
-        apt-get update && apt-get install -y curl ca-certificates
-
         curl -o .repo/local_manifests/manifest_brcm_rpi.xml \
           -L https://raw.githubusercontent.com/raspberry-vanilla/android_local_manifest/android-15.0/manifest_brcm_rpi.xml --create-dirs
 
@@ -112,19 +96,24 @@ steps:
         
         echo "✓ Repository initialized successfully"
     
-    waitFor: ['install-repo']
+    waitFor: ['install-dependencies']
 
-  # ========== STEP 4: Sync AOSP Source Code ==========
+  # ========== STEP 3: Sync AOSP Source Code ==========
   - name: 'ubuntu:22.04'
     id: 'sync-source'
+    volumes:
+      - name: 'workspace'
+        path: '/workspace'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
         echo "=========================================="
-        echo "STEP 4: Syncing AOSP Source Code..."
+        echo "STEP 3: Syncing AOSP Source Code..."
         echo "This may take 30-60 minutes..."
         echo "=========================================="
+        
+        apt-get update && apt-get install -y git repo python3 curl
         
         cd /workspace/aosp
         
@@ -143,16 +132,21 @@ steps:
     waitFor: ['repo-init']
     timeout: '7200s'
 
-  # ========== STEP 5: Setup Build Environment ==========
+  # ========== STEP 4: Setup Build Environment ==========
   - name: 'ubuntu:22.04'
     id: 'setup-build-env'
+    volumes:
+      - name: 'workspace'
+        path: '/workspace'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
         echo "=========================================="
-        echo "STEP 5: Setting up Build Environment..."
+        echo "STEP 4: Setting up Build Environment..."
         echo "=========================================="
+        
+        apt-get update && apt-get install -y git repo python3 openjdk-11-jdk-headless flex bison build-essential
         
         cd /workspace/aosp
         
@@ -172,17 +166,22 @@ steps:
     
     waitFor: ['sync-source']
 
-  # ========== STEP 6: Build AOSP ==========
+  # ========== STEP 5: Build AOSP ==========
   - name: 'ubuntu:22.04'
     id: 'build-aosp'
+    volumes:
+      - name: 'workspace'
+        path: '/workspace'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
         echo "=========================================="
-        echo "STEP 6: Building AOSP..."
+        echo "STEP 5: Building AOSP..."
         echo "This will take 2-6 hours..."
         echo "=========================================="
+        
+        apt-get update && apt-get install -y git repo python3 openjdk-11-jdk-headless flex bison build-essential
         
         cd /workspace/aosp
         
@@ -202,9 +201,12 @@ steps:
     waitFor: ['setup-build-env']
     timeout: '14400s'
 
-  # ========== STEP 7: Upload Build Artifacts ==========
+  # ========== STEP 6: Upload Build Artifacts ==========
   - name: 'gcr.io/cloud-builders/gsutil'
     id: 'upload-artifacts'
+    volumes:
+      - name: 'workspace'
+        path: '/workspace'
     args:
       - '-m'
       - 'cp'
@@ -214,9 +216,12 @@ steps:
     
     waitFor: ['build-aosp']
 
-  # ========== STEP 8: Upload Build Log ==========
+  # ========== STEP 7: Upload Build Log ==========
   - name: 'gcr.io/cloud-builders/gsutil'
     id: 'upload-log'
+    volumes:
+      - name: 'workspace'
+        path: '/workspace'
     args:
       - 'cp'
       - '/workspace/build.log'
@@ -233,3 +238,10 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 timeout: '21600s'
+
+# ============================================
+# Volumes - Persistent Storage Across Steps
+# ============================================
+volumes:
+  - name: 'workspace'
+    path: '/workspace'
