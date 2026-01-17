@@ -163,9 +163,9 @@ steps:
         echo "=========================================="
         echo "Build Configuration:"
         echo "=========================================="
-        echo "Platform Version: $PLATFORM_VERSION"
-        echo "Target Product: $TARGET_PRODUCT"
-        echo "Build Variant: $TARGET_BUILD_VARIANT"
+        echo "Platform Version: $$PLATFORM_VERSION"
+        echo "Target Product: $$TARGET_PRODUCT"
+        echo "Build Variant: $$TARGET_BUILD_VARIANT"
         echo "=========================================="
         
         echo "✓ Build environment configured successfully"
