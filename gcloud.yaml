@@ -210,7 +210,7 @@ steps:
       - 'cp'
       - '-r'
       - '/workspace/aosp/out/target/product/'
-      - 'gs://dulcet-analyst-484512-n8/build-${BUILD_ID}/'
+      - 'gs://dulcet-analyst-484512-n8/build-${_BUILD_ID}/'
     
     waitFor: ['build-aosp']
 
@@ -220,7 +220,7 @@ steps:
     args:
       - 'cp'
       - '/workspace/build.log'
-      - 'gs://dulcet-analyst-484512-n8/build-${BUILD_ID}/build.log'
+      - 'gs://dulcet-analyst-484512-n8/build-${_BUILD_ID}/build.log'
     
     waitFor: ['build-aosp']
 
@@ -233,3 +233,9 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 timeout: '21600s'
+
+# ============================================
+# Substitutions
+# ============================================
+substitutions:
+  _BUILD_ID: ${BUILD_ID}
