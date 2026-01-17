@@ -53,14 +53,12 @@ steps:
           e2fsprogs \
           fdisk \
           kpartx \
-          mtools \
+          mtools
         
         git config --global user.email "aswin14887@gmail.com"
         git config --global user.name "Aswin Vodapally"
         
         echo "✓ Dependencies installed successfully"
-
-    waitFor: ['install-dependencies']
 
   # ========== STEP 2: Install repo Tool ==========
   - name: 'ubuntu:22.04'
@@ -82,7 +80,7 @@ steps:
         
         echo "✓ repo tool installed successfully"
     
-    waitFor: ['install-repo']
+    waitFor: ['install-dependencies']
 
   # ========== STEP 3: Initialize AOSP Repository ==========
   - name: 'ubuntu:22.04'
@@ -114,7 +112,7 @@ steps:
         
         echo "✓ Repository initialized successfully"
     
-    waitFor: ['repo-init']
+    waitFor: ['install-repo']
 
   # ========== STEP 4: Sync AOSP Source Code ==========
   - name: 'ubuntu:22.04'
@@ -132,7 +130,7 @@ steps:
         
         export USE_CCACHE=1
         export CCACHE_DIR=/workspace/ccache
-        mkdir -p $$CCACHE_DIR
+        mkdir -p $CCACHE_DIR
         
         repo sync \
           -j8 \
@@ -142,7 +140,7 @@ steps:
         
         echo "✓ Source code synced successfully"
     
-    waitFor: ['sync-source']
+    waitFor: ['repo-init']
     timeout: '7200s'
 
   # ========== STEP 5: Setup Build Environment ==========
@@ -165,14 +163,14 @@ steps:
         echo "=========================================="
         echo "Build Configuration:"
         echo "=========================================="
-        echo "Platform Version: $$PLATFORM_VERSION"
-        echo "Target Product: $$TARGET_PRODUCT"
-        echo "Build Variant: $$TARGET_BUILD_VARIANT"
+        echo "Platform Version: $PLATFORM_VERSION"
+        echo "Target Product: $TARGET_PRODUCT"
+        echo "Build Variant: $TARGET_BUILD_VARIANT"
         echo "=========================================="
         
         echo "✓ Build environment configured successfully"
     
-    waitFor: ['setup-build-env']
+    waitFor: ['sync-source']
 
   # ========== STEP 6: Build AOSP ==========
   - name: 'ubuntu:22.04'
@@ -201,7 +199,7 @@ steps:
         echo "✓ Build completed successfully!"
         echo "=========================================="
     
-    waitFor: ['build-aosp']
+    waitFor: ['setup-build-env']
     timeout: '14400s'
 
   # ========== STEP 7: Upload Build Artifacts ==========
@@ -214,7 +212,7 @@ steps:
       - '/workspace/aosp/out/target/product/'
       - 'gs://dulcet-analyst-484512-n8/build-${BUILD_ID}/'
     
-    waitFor: ['upload-artifacts']
+    waitFor: ['build-aosp']
 
   # ========== STEP 8: Upload Build Log ==========
   - name: 'gcr.io/cloud-builders/gsutil'
@@ -224,7 +222,7 @@ steps:
       - '/workspace/build.log'
       - 'gs://dulcet-analyst-484512-n8/build-${BUILD_ID}/build.log'
     
-    waitFor: ['upload-log']
+    waitFor: ['build-aosp']
 
 # ============================================
 # Build Options & Configuration
